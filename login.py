@@ -11,7 +11,6 @@ urls = [
 ]
 
 app = web.application(urls, globals())
-web.config.debug = False
 db = web.database(dbn='sqlite', db='database.db')
 db.query('''
     CREATE TABLE IF NOT EXISTS users(
@@ -23,13 +22,9 @@ db.query('''
     );
 ''')
 
-store = web.session.DiskStore('sessions')
-session = web.session.Session(app, store, initializer={'acc_token':''})
-web.config._session = session
-
 def genToken():
-    r = int(rand.random()*10**7)
-    return str(hashlib.sha1('%d%s'%(r, time.ctime())).hexdigest())
+    r = rand.random()
+    return str(hashlib.sha1('%f%s'%(r, time.ctime())).hexdigest())
 
 def getUser(usr, tkn=None):
     if tkn:
@@ -52,10 +47,6 @@ def json_response(f):
         else:
             return res
     return wrapper
-
-class Index:
-    def GET(self):
-        return
 
 class SignUp:
     @json_response
@@ -90,18 +81,13 @@ class SignIn:
             return {'error': 'invalidPass - invalid password, try again'}
         else:
             t = int(time.time())
-            if t-user['utme'] > 1200:
+            ### Token expires within 4 hours of inactivity
+            if not user['utkn'] or t-user['utme'] > 14400:
                 token = genToken()
             else:
                 token = user['utkn']
 
             res = db.update('users', where='uid=$id', utkn=token, utme=int(time.time()), vars={'id':user['uid']})
-
-            '''
-            s = web.config._session
-            s.acc_token = token
-            web.config._session = s
-            '''
 
             return {'success':True, 'token':token}
 
@@ -110,11 +96,6 @@ class SignIn:
 class SignOut:
     @json_response
     def GET(self):
-        '''
-        s = web.config._session
-        s.kill()
-        return dir(s)
-        '''
 
         i = web.input()
         if not i.get('tkn'):
@@ -125,7 +106,7 @@ class SignOut:
         if not user:
             return {'error':'Not logged in'}
 
-        res = db.update('users', where='uid=$id', utkn=None, utme=0, vars={'id':user['uid']})
+        res = db.update('users', where='uid=$id', utkn=None, vars={'id':user['uid']})
 
         return web.seeother('/')
 

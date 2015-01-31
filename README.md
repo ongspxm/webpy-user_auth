@@ -3,7 +3,6 @@ The current setup for this user authentication system are accounts that uses ema
 
 - Email address validation not implemented
 - Simple hashing of email and password for verification
-- Account types (user & admin)
-- Session structure: `session = {'acc_type': <0|1|2>, 'acc_id':<id>}`
 - Database schema for simple login included (sqlite)
-- Login token for app usage
+- Login token with expiration and everything
+- Easy to read, easy to maintain
