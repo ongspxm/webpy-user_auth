@@ -1,0 +1,13 @@
+DROP TABLE IF EXISTS users;
+CREATE TABLE users(
+    user_id INTEGER PRIMARY KEY,
+    user_email TEXT,
+    user_hash TEXT
+);
+
+DROP TABLE IF EXISTS tokens;
+CREATE TABLE tokens(
+    token_id INTEGER PRIMARY KEY,
+    token_hash TEXT,
+    user_id REFERENCES users
+);
